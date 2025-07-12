@@ -81,15 +81,11 @@ M.eval_line = function()
 end
 
 M.setup = function()
-	print("[zim-sequencer] setup called")
-
 	local path = engine_path()
 	if vim.fn.executable(path) == 0 then
-		vim.notify("[zim-sequencer] Engine not executable: " .. path, vim.log.levels.ERROR)
+		append_to_output("⚠ Engine not found at: " .. path)
 		return
 	end
-
-	print("[zim-sequencer] starting engine: " .. path)
 
 	M.job_id = vim.fn.jobstart(path, {
 		stdout_buffered = false,
@@ -104,13 +100,7 @@ M.setup = function()
 			end
 		end,
 		on_stderr = function(_, data, _)
-			if data then
-				for _, line in ipairs(data) do
-					if line ~= "" then
-						vim.notify("[zim-sequencer] stderr: " .. line, vim.log.levels.ERROR)
-					end
-				end
-			end
+			-- Silently ignore stderr unless it's critical
 		end,
 	})
 

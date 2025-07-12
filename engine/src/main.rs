@@ -47,7 +47,6 @@ fn main() {
         }
 
         let trimmed = input.trim_end();
-        eprintln!("DEBUG: received: {}", trimmed); // also log to stderr
         println!("{}", analyze_line(trimmed));
         let _ = io::stdout().flush();
     }
