@@ -5,21 +5,24 @@ local function engine_path()
 end
 
 M.eval_selection = function()
-	print("[zim-sequencer] eval_selection called")
+	vim.schedule(function()
+		print("[zim-sequencer] eval_selection called")
 
-	if not M.job_id then
-		vim.notify("[zim-sequencer] Engine not running", vim.log.levels.WARN)
-		return
-	end
+		if not M.job_id then
+			vim.notify("[zim-sequencer] Engine is not running", vim.log.levels.WARN)
+			return
+		end
 
-	local start_line = vim.api.nvim_buf_get_mark(0, "<")[1]
-	local end_line = vim.api.nvim_buf_get_mark(0, ">")[1]
+		local buf = vim.api.nvim_get_current_buf()
+		local start_line = vim.api.nvim_buf_get_mark(buf, "<")[1]
+		local end_line = vim.api.nvim_buf_get_mark(buf, ">")[1]
+		local lines = vim.api.nvim_buf_get_lines(buf, start_line - 1, end_line, false)
+		local input = table.concat(lines, "\n")
 
-	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
-	local input = table.concat(lines, "\n")
+		print("[zim-sequencer] sending input:\n" .. input)
 
-	print("[zim-sequencer] sending input:\n" .. input)
-	vim.fn.chansend(M.job_id, input .. "\n")
+		vim.fn.chansend(M.job_id, input .. "\n")
+	end)
 end
 
 M.setup = function()
@@ -38,12 +41,12 @@ M.setup = function()
 		stderr_buffered = true,
 
 		on_stdout = function(_, data)
-			print("[zim-sequencer] engine stdout:")
-			print(vim.inspect(data))
-			if data then
+			if data and #data > 0 and data[1] ~= "" then
+				print("[zim-sequencer] engine stdout:")
+				print(vim.inspect(data))
 				vim.notify(table.concat(data, "\n"))
 			end
-		end,
+		end
 
 		on_stderr = function(_, data)
 			print("[zim-sequencer] engine stderr:")

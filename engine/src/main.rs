@@ -1,32 +1,32 @@
-//! src/main.rs
-
-use std::io::Write;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 
 fn analyze_line(line: &str) -> String {
-    // Extremely basic harmony recognition
     if line.contains("C") && line.contains("E") && line.contains("G") {
         "[✔] Detected C major triad".to_string()
-    } else if line.contains("D") && line.contains("F") && line.contains("A") {
-        "[✔] Detected D minor triad".to_string()
     } else {
         format!("[ℹ] Parsed: {}", line)
     }
 }
 
 fn main() {
-    let _ = io::stdout().flush(); // flush the intro println
     println!("🎵 zim-sequencer engine started");
     let _ = io::stdout().flush();
-    println!("🎵 Text Sequencer REPL ready. Send code blocks via stdin.");
+
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         match line {
             Ok(code) => {
+                println!("⏩ Received: {}", code);
+                let _ = io::stdout().flush();
+
                 let response = analyze_line(&code);
                 println!("{}", response);
+                let _ = io::stdout().flush();
             }
-            Err(e) => eprintln!("Error reading input: {}", e),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                let _ = io::stderr().flush();
+            }
         }
     }
 }
