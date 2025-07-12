@@ -7,5 +7,6 @@ authors = ["Ed Sweeney <ed@onextent.com>"]
 description = "An experimental sequence engine for Zim"
 
 [dependencies]
+rodio = "0.17"
 
 

@@ -1,7 +1,10 @@
 use std::io::{self, BufRead, BufReader, Write};
+use std::sync::{Arc, Mutex};
 
 mod music_theory;
+mod audio;
 use music_theory::{Note, parse_note, analyze_chord};
+use audio::Synth;
 
 fn parse_transformation(input: &str) -> (Vec<Note>, Option<String>) {
     let parts: Vec<&str> = input.split_whitespace().collect();
@@ -206,9 +209,13 @@ fn identify_chord_type(notes: &[Note]) -> String {
 fn main() {
     // Start silently - the UI will show when ready
 
+    // Initialize audio (wrapped in Arc<Mutex> for thread safety)
+    let synth = Arc::new(Mutex::new(Synth::new().ok()));
+    
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin);
     let mut input = String::new();
+    let mut last_notes: Option<Vec<Note>> = None;
 
     loop {
         input.clear();
@@ -218,7 +225,61 @@ fn main() {
         }
 
         let trimmed = input.trim_end();
-        println!("{}", analyze_line(trimmed));
+        
+        // Check for audio commands
+        if trimmed == "!stop" {
+            if let Ok(synth_lock) = synth.lock() {
+                if let Some(ref s) = *synth_lock {
+                    s.stop();
+                }
+            }
+            println!("═══ Audio ═══\nPlayback stopped\n═══════════════\n");
+            let _ = io::stdout().flush();
+            continue;
+        }
+        
+        // Parse and analyze
+        let (mut notes, transform) = parse_transformation(trimmed);
+        if let Some(ref t) = transform {
+            notes = apply_transformation(&notes, t);
+        }
+        
+        // Check if we should play
+        let should_play = trimmed.ends_with('!');
+        let play_long = trimmed.ends_with("!!");
+        
+        if !notes.is_empty() {
+            last_notes = Some(notes.clone());
+            
+            if should_play {
+                if let Ok(synth_lock) = synth.lock() {
+                    if let Some(ref s) = *synth_lock {
+                        let duration = if play_long { 2000 } else { 800 };
+                        s.play_notes(&notes, duration);
+                    }
+                }
+            }
+        }
+        
+        // Play last notes if just "!" is entered
+        if trimmed == "!" || trimmed == "!!" {
+            if let Some(ref notes) = last_notes {
+                if let Ok(synth_lock) = synth.lock() {
+                    if let Some(ref s) = *synth_lock {
+                        let duration = if trimmed == "!!" { 2000 } else { 800 };
+                        s.play_notes(notes, duration);
+                        println!("═══ Audio ═══\nPlaying: {}\n═══════════════\n",
+                            notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
+                        let _ = io::stdout().flush();
+                    }
+                }
+            }
+            continue;
+        }
+        
+        // Remove ! from input for analysis
+        let analysis_input = trimmed.trim_end_matches('!');
+        println!("{}", analyze_line(analysis_input));
         let _ = io::stdout().flush();
     }
 }
