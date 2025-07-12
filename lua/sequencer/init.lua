@@ -87,7 +87,7 @@ M.eval_selection = function()
 	end
 end
 
-M.eval_line = function()
+M.eval_line = function(advance)
 	if not M.job_id then
 		append_to_output("⚠ Engine is not running")
 		return
@@ -97,11 +97,13 @@ M.eval_line = function()
 	append_to_output("\n>>> " .. line)
 	vim.fn.chansend(M.job_id, line .. "\n")
 	
-	-- Move to next line for sequential playback
-	local current_line = vim.fn.line('.')
-	local last_line = vim.fn.line('$')
-	if current_line < last_line then
-		vim.cmd('normal! j')
+	-- Move to next line only if advance is true
+	if advance then
+		local current_line = vim.fn.line('.')
+		local last_line = vim.fn.line('$')
+		if current_line < last_line then
+			vim.cmd('normal! j')
+		end
 	end
 end
 
@@ -144,15 +146,15 @@ M.setup = function()
 		buffer = buf,
 	})
 	
-	vim.keymap.set("n", "<leader>e", "<cmd>lua require('sequencer').eval_line()<CR>", {
-		desc = "Evaluate current line",
+	vim.keymap.set("n", "<leader>e", "<cmd>lua require('sequencer').eval_line(false)<CR>", {
+		desc = "Evaluate current line (stay)",
 		noremap = true,
 		silent = true,
 		buffer = buf,
 	})
 	
-	vim.keymap.set("n", "<CR>", "<cmd>lua require('sequencer').eval_line()<CR>", {
-		desc = "Evaluate current line",
+	vim.keymap.set("n", "<CR>", "<cmd>lua require('sequencer').eval_line(true)<CR>", {
+		desc = "Evaluate current line and advance",
 		noremap = true,
 		silent = true,
 		buffer = buf,
