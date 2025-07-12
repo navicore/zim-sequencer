@@ -34,8 +34,8 @@ M.setup = function()
 	print("[zim-sequencer] starting engine: " .. path)
 
 	M.job_id = vim.fn.jobstart(path, {
-		stdout_buffered = true,
-		stderr_buffered = true,
+		stdout_buffered = false,
+		stderr_buffered = false,
 		on_stdout = function(_, data, _)
 			if data then
 				for _, line in ipairs(data) do
