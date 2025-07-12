@@ -1,19 +1,38 @@
 local M = {}
 
-local engine_path = vim.fn.stdpath("data") .. "/lazy/zim-sequencer/engine/target/release/zim-sequencer"
+local function engine_path()
+	return vim.fn.stdpath("data") .. "/lazy/zim-sequencer/engine/target/release/zim-sequencer"
+end
 
-M.setup = function()
-	print("[zim-sequencer] setup called")
-	print("[zim-sequencer] engine path: " .. engine_path)
+M.eval_selection = function()
+	print("[zim-sequencer] eval_selection called")
 
-	if vim.fn.executable(engine_path) == 0 then
-		vim.notify("[zim-sequencer] Engine not found or not executable", vim.log.levels.ERROR)
+	if not M.job_id then
+		vim.notify("[zim-sequencer] Engine not running", vim.log.levels.WARN)
 		return
 	end
 
-	print("[zim-sequencer] starting engine...")
+	local start_line = vim.fn.getpos("'<")[2]
+	local end_line = vim.fn.getpos("'>")[2]
+	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+	local input = table.concat(lines, "\n")
 
-	M.job_id = vim.fn.jobstart({ engine_path }, {
+	print("[zim-sequencer] sending input:\n" .. input)
+	vim.fn.chansend(M.job_id, input .. "\n")
+end
+
+M.setup = function()
+	print("[zim-sequencer] setup called")
+
+	local path = engine_path()
+	if vim.fn.executable(path) == 0 then
+		vim.notify("[zim-sequencer] Engine not found or not executable: " .. path, vim.log.levels.ERROR)
+		return
+	end
+
+	print("[zim-sequencer] starting engine: " .. path)
+
+	M.job_id = vim.fn.jobstart({ path }, {
 		stdout_buffered = true,
 		stderr_buffered = true,
 
@@ -33,30 +52,25 @@ M.setup = function()
 			end
 		end,
 	})
+
+	-- Only set the keymap for this buffer
+	local buf = vim.api.nvim_get_current_buf()
+	vim.keymap.set("v", "<leader>e", M.eval_selection, {
+		desc = "Evaluate Zim block",
+		noremap = true,
+		silent = true,
+		buffer = buf,
+	})
+
+	vim.b.zim_sequencer_active = true
 end
 
-M.eval_selection = function()
-	print("[zim-sequencer] eval_selection called")
-
-	if not M.job_id then
-		vim.notify("[zim-sequencer] Engine not running", vim.log.levels.WARN)
-		return
-	end
-
-	local start_line = vim.fn.getpos("'<")[2]
-	local end_line = vim.fn.getpos("'>")[2]
-	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
-	local input = table.concat(lines, "\n")
-
-	print("[zim-sequencer] sending input:\n" .. input)
-
-	vim.fn.chansend(M.job_id, input .. "\n")
-end
-
-vim.keymap.set("v", "<leader>e", M.eval_selection, {
-	desc = "Evaluate Zim block",
-	noremap = true,
-	silent = true,
+-- Automatically call setup only for `zim` filetype
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "zim",
+	callback = function()
+		require("sequencer").setup()
+	end,
 })
 
 return M
