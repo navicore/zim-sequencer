@@ -1,4 +1,4 @@
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, BufReader, Write};
 
 fn analyze_line(line: &str) -> String {
     if line.contains("C") && line.contains("E") && line.contains("G") {
@@ -13,20 +13,18 @@ fn main() {
     let _ = io::stdout().flush();
 
     let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        match line {
-            Ok(code) => {
-                println!("⏩ Received: {}", code);
-                let _ = io::stdout().flush();
+    let mut reader = BufReader::new(stdin);
 
-                let response = analyze_line(&code);
-                println!("{}", response);
-                let _ = io::stdout().flush();
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                let _ = io::stderr().flush();
-            }
+    loop {
+        let mut input = String::new();
+        let bytes_read = reader.read_line(&mut input).unwrap();
+        if bytes_read == 0 {
+            continue; // EOF or nothing
         }
+
+        println!("⏩ Received: {}", input.trim_end());
+        let response = analyze_line(&input);
+        println!("{}", response);
+        let _ = io::stdout().flush();
     }
 }

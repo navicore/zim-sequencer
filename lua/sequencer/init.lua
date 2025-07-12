@@ -13,10 +13,10 @@ M.eval_selection = function()
 			return
 		end
 
-		local buf = vim.api.nvim_get_current_buf()
-		local start_line = vim.api.nvim_buf_get_mark(buf, "<")[1]
-		local end_line = vim.api.nvim_buf_get_mark(buf, ">")[1]
-		local lines = vim.api.nvim_buf_get_lines(buf, start_line - 1, end_line, false)
+		-- get visual selection the safest way
+		local start_pos = vim.fn.getpos("'<")[2]
+		local end_pos = vim.fn.getpos("'>")[2]
+		local lines = vim.fn.getline(start_pos, end_pos)
 		local input = table.concat(lines, "\n")
 
 		print("[zim-sequencer] sending input:\n" .. input)
