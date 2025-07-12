@@ -33,7 +33,7 @@ M.setup = function()
 
 	print("[zim-sequencer] starting engine: " .. path)
 
-	M.job_id = vim.fn.jobstart(engine_path, {
+	M.job_id = vim.fn.jobstart(path, {
 		stdout_buffered = true,
 		stderr_buffered = true,
 		on_stdout = function(_, data, _)
