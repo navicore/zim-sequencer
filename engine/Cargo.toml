@@ -1,6 +1,11 @@
 [package]
-name = "engine"
+name = "zim-sequencer"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+authors = ["Ed Sweeney <ed@onextent.com>"]
+description = "An experimental sequence engine for Zim"
 
 [dependencies]
+
+
