@@ -226,6 +226,18 @@ fn main() {
 
         let trimmed = input.trim_end();
         
+        // Strip comments (everything after #)
+        let trimmed = if let Some(pos) = trimmed.find('#') {
+            trimmed[..pos].trim_end()
+        } else {
+            trimmed
+        };
+        
+        // Skip empty lines
+        if trimmed.is_empty() {
+            continue;
+        }
+        
         // Check for audio commands
         if trimmed == "!stop" {
             if let Ok(synth_lock) = synth.lock() {
