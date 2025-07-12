@@ -5,24 +5,21 @@ local function engine_path()
 end
 
 M.eval_selection = function()
-	vim.schedule(function()
-		print("[zim-sequencer] eval_selection called")
+	print("[zim-sequencer] eval_selection called")
 
-		if not M.job_id then
-			vim.notify("[zim-sequencer] Engine is not running", vim.log.levels.WARN)
-			return
-		end
+	if not M.job_id then
+		vim.notify("[zim-sequencer] Engine is not running", vim.log.levels.WARN)
+		return
+	end
 
-		-- get visual selection the safest way
-		local start_pos = vim.fn.getpos("'<")[2]
-		local end_pos = vim.fn.getpos("'>")[2]
-		local lines = vim.fn.getline(start_pos, end_pos)
-		local input = table.concat(lines, "\n")
+	local start_line = vim.fn.getpos("'<")[2]
+	local end_line = vim.fn.getpos("'>")[2]
+	local lines = vim.fn.getline(start_line, end_line)
+	local input = table.concat(lines, "\n")
 
-		print("[zim-sequencer] sending input:\n" .. input)
+	print("[zim-sequencer] sending input:\n" .. input)
 
-		vim.fn.chansend(M.job_id, input .. "\n")
-	end)
+	vim.fn.chansend(M.job_id, input .. "\n")
 end
 
 M.setup = function()
@@ -58,7 +55,7 @@ M.setup = function()
 	})
 
 	local buf = vim.api.nvim_get_current_buf()
-	vim.keymap.set("v", "<leader>e", M.eval_selection, {
+	vim.keymap.set("v", "<leader>e", ":<C-U>lua require('sequencer').eval_selection()<CR>", {
 		desc = "Evaluate Zim block",
 		noremap = true,
 		silent = true,

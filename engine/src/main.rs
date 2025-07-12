@@ -17,14 +17,18 @@ fn main() {
 
     loop {
         let mut input = String::new();
-        let bytes_read = reader.read_line(&mut input).unwrap();
-        if bytes_read == 0 {
-            continue; // EOF or nothing
+        match reader.read_line(&mut input) {
+            Ok(0) => continue,
+            Ok(_) => {
+                println!("⏩ Received: {}", input.trim_end());
+                let response = analyze_line(&input);
+                println!("{}", response);
+                let _ = io::stdout().flush();
+            }
+            Err(e) => {
+                eprintln!("error: {}", e);
+                let _ = io::stderr().flush();
+            }
         }
-
-        println!("⏩ Received: {}", input.trim_end());
-        let response = analyze_line(&input);
-        println!("{}", response);
-        let _ = io::stdout().flush();
     }
 }
