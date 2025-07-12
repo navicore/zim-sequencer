@@ -96,6 +96,13 @@ M.eval_line = function()
 	local line = vim.api.nvim_get_current_line()
 	append_to_output("\n>>> " .. line)
 	vim.fn.chansend(M.job_id, line .. "\n")
+	
+	-- Move to next line for sequential playback
+	local current_line = vim.fn.line('.')
+	local last_line = vim.fn.line('$')
+	if current_line < last_line then
+		vim.cmd('normal! j')
+	end
 end
 
 M.setup = function()
