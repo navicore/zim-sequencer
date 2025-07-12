@@ -30,7 +30,7 @@ M.setup = function()
 
 	local path = engine_path()
 	if vim.fn.executable(path) == 0 then
-		vim.notify("[zim-sequencer] Engine not found or not executable: " .. path, vim.log.levels.ERROR)
+		vim.notify("[zim-sequencer] Engine not executable: " .. path, vim.log.levels.ERROR)
 		return
 	end
 
@@ -46,18 +46,17 @@ M.setup = function()
 				print(vim.inspect(data))
 				vim.notify(table.concat(data, "\n"))
 			end
-		end
+		end,
 
 		on_stderr = function(_, data)
-			print("[zim-sequencer] engine stderr:")
-			print(vim.inspect(data))
-			if data then
+			if data and #data > 0 and data[1] ~= "" then
+				print("[zim-sequencer] engine stderr:")
+				print(vim.inspect(data))
 				vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR)
 			end
 		end,
 	})
 
-	-- Only set the keymap for this buffer
 	local buf = vim.api.nvim_get_current_buf()
 	vim.keymap.set("v", "<leader>e", M.eval_selection, {
 		desc = "Evaluate Zim block",
@@ -69,7 +68,6 @@ M.setup = function()
 	vim.b.zim_sequencer_active = true
 end
 
--- Automatically call setup only for `zim` filetype
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "zim",
 	callback = function()
