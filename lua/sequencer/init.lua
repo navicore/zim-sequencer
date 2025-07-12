@@ -33,23 +33,25 @@ M.setup = function()
 
 	print("[zim-sequencer] starting engine: " .. path)
 
-	M.job_id = vim.fn.jobstart({ path }, {
+	M.job_id = vim.fn.jobstart(engine_path, {
 		stdout_buffered = true,
 		stderr_buffered = true,
-
-		on_stdout = function(_, data)
-			if data and #data > 0 and data[1] ~= "" then
-				print("[zim-sequencer] engine stdout:")
-				print(vim.inspect(data))
-				vim.notify(table.concat(data, "\n"))
+		on_stdout = function(_, data, _)
+			if data then
+				for _, line in ipairs(data) do
+					if line ~= "" then
+						vim.notify("[zim-sequencer] stdout: " .. line)
+					end
+				end
 			end
 		end,
-
-		on_stderr = function(_, data)
-			if data and #data > 0 and data[1] ~= "" then
-				print("[zim-sequencer] engine stderr:")
-				print(vim.inspect(data))
-				vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR)
+		on_stderr = function(_, data, _)
+			if data then
+				for _, line in ipairs(data) do
+					if line ~= "" then
+						vim.notify("[zim-sequencer] stderr: " .. line, vim.log.levels.ERROR)
+					end
+				end
 			end
 		end,
 	})
