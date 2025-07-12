@@ -8,12 +8,6 @@ M.setup = function()
 		return
 	end
 
-	vim.keymap.set("v", "<leader>e", M.eval_selection, {
-		desc = "Evaluate Zim block",
-		noremap = true,
-		silent = true,
-	})
-
 	M.job_id = vim.fn.jobstart({ engine_path }, {
 		stdout_buffered = true,
 		on_stdout = function(_, data)
@@ -27,6 +21,12 @@ M.setup = function()
 				vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR)
 			end
 		end,
+	})
+
+	vim.keymap.set("v", "<leader>e", M.eval_selection, {
+		desc = "Evaluate Zim block",
+		noremap = true,
+		silent = true,
 	})
 end
 
