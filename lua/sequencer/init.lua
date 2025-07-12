@@ -12,8 +12,9 @@ M.eval_selection = function()
 		return
 	end
 
-	local start_line = vim.fn.getpos("'<")[2]
-	local end_line = vim.fn.getpos("'>")[2]
+	local start_line = vim.api.nvim_buf_get_mark(0, "<")[1]
+	local end_line = vim.api.nvim_buf_get_mark(0, ">")[1]
+
 	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
 	local input = table.concat(lines, "\n")
 

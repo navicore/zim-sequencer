@@ -1,5 +1,6 @@
 //! src/main.rs
 
+use std::io::Write;
 use std::io::{self, BufRead};
 
 fn analyze_line(line: &str) -> String {
@@ -14,6 +15,9 @@ fn analyze_line(line: &str) -> String {
 }
 
 fn main() {
+    let _ = io::stdout().flush(); // flush the intro println
+    println!("🎵 zim-sequencer engine started");
+    let _ = io::stdout().flush();
     println!("🎵 Text Sequencer REPL ready. Send code blocks via stdin.");
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
