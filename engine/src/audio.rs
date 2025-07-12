@@ -19,8 +19,8 @@ impl Synth {
     }
     
     pub fn play_notes(&self, notes: &[Note], duration_ms: u64) {
-        // Clear any previous sounds
-        self.sink.stop();
+        // Don't stop previous sounds - allow overlapping/sequential playback
+        // self.sink.stop();
         
         // Create a mixed signal for all notes (additive synthesis)
         let duration = Duration::from_millis(duration_ms);

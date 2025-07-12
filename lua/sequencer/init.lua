@@ -62,11 +62,29 @@ M.eval_selection = function()
 	local start_line = vim.fn.getpos("'<")[2]
 	local end_line = vim.fn.getpos("'>")[2]
 	local lines = vim.fn.getline(start_line, end_line)
-	local input = table.concat(lines, "\n")
-
-	append_to_output("\n>>> " .. input)
-
-	vim.fn.chansend(M.job_id, input .. "\n")
+	
+	-- For multi-line selections, send each line separately
+	if #lines > 1 then
+		append_to_output("\n>>> [Multi-line sequence]")
+		for i, line in ipairs(lines) do
+			-- Skip empty lines and comment-only lines
+			local trimmed = line:match("^(.-)#") or line
+			trimmed = vim.trim(trimmed)
+			if trimmed ~= "" then
+				append_to_output("    " .. line)
+				vim.fn.chansend(M.job_id, line .. "\n")
+				-- Small delay between lines for sequential playback
+				if i < #lines and line:match("!") then
+					vim.wait(300)  -- 300ms delay between played lines
+				end
+			end
+		end
+	else
+		-- Single line selection
+		local input = table.concat(lines, "\n")
+		append_to_output("\n>>> " .. input)
+		vim.fn.chansend(M.job_id, input .. "\n")
+	end
 end
 
 M.eval_line = function()
