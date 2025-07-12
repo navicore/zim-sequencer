@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-engine:
+    name: Build & Test Rust Engine
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build
+        working-directory: engine
+        run: cargo build --release
+
+      - name: Test
+        working-directory: engine
+        run: cargo test
+
+  lint-lua:
+    name: Lint Lua Plugin
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install LuaCheck
+        run: |
+          sudo apt-get install luarocks -y
+          sudo luarocks install luacheck
+
+      - name: Lint plugin
+        run: luacheck nvim/lua
+

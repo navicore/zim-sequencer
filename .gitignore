@@ -1,0 +1,10 @@
+# Rust
+/engine/target
+
+# Lua
+nvim/.DS_Store
+
+# General
+**/__pycache__/
+**/.DS_Store
+
