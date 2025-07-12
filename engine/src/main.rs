@@ -1,16 +1,39 @@
 use std::io::{self, BufRead, BufReader, Write};
 
 fn analyze_line(line: &str) -> String {
-    if line.contains("C") && line.contains("E") && line.contains("G") {
-        "[✔] Detected C major triad".to_string()
-    } else {
-        format!("[ℹ] Parsed: {}", line)
+    let notes: Vec<&str> = line.split_whitespace().collect();
+    
+    if notes.is_empty() {
+        return String::new();
     }
+    
+    let mut output = String::new();
+    output.push_str(&format!("═══ Analysis ═══\n"));
+    output.push_str(&format!("Notes: {}\n", notes.join(" ")));
+    
+    // Basic chord detection
+    if notes.len() >= 3 {
+        if notes.contains(&"C") && notes.contains(&"E") && notes.contains(&"G") {
+            output.push_str("Chord: C major\n");
+            output.push_str("Quality: Major triad\n");
+            output.push_str("Intervals: M3, P5\n");
+        } else if notes.contains(&"A") && notes.contains(&"C") && notes.contains(&"E") {
+            output.push_str("Chord: A minor\n");
+            output.push_str("Quality: Minor triad\n");
+            output.push_str("Intervals: m3, P5\n");
+        } else {
+            output.push_str(&format!("Chord: Unknown ({} notes)\n", notes.len()));
+        }
+    } else {
+        output.push_str(&format!("Single notes or interval\n"));
+    }
+    
+    output.push_str("═══════════════\n");
+    output
 }
 
 fn main() {
-    println!("🎵 zim-sequencer engine started");
-    let _ = io::stdout().flush(); // Ensure initial message prints
+    // Start silently - the UI will show when ready
 
     let stdin = io::stdin();
     let mut reader = BufReader::new(stdin);
