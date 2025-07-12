@@ -1,19 +1,14 @@
 local M = {}
 
-local function engine_path()
-	local info = debug.getinfo(1, "S")
-	local plugin_root = info.source:sub(2):match("(.*/)")
-	return plugin_root .. "engine/target/release/zim-sequencer"
-end
+local engine_path = vim.fn.stdpath("data") .. "/lazy/zim-sequencer/engine/target/release/zim-sequencer"
 
 M.setup = function()
-	local path = engine_path()
-	if vim.fn.executable(path) == 0 then
-		vim.notify("[zim-sequencer] engine not found or not executable: " .. path, vim.log.levels.ERROR)
+	if vim.fn.executable(engine_path) == 0 then
+		vim.notify("[zim-sequencer] Engine binary not found or not executable: " .. engine_path, vim.log.levels.ERROR)
 		return
 	end
 
-	M.job_id = vim.fn.jobstart({ path }, {
+	M.job_id = vim.fn.jobstart({ engine_path }, {
 		stdout_buffered = true,
 		on_stdout = function(_, data)
 			if data then
@@ -29,10 +24,6 @@ M.setup = function()
 	})
 end
 
-M.eval_selection = function()
-	-- same as before
-end
-
-vim.keymap.set("v", "<leader>e", M.eval_selection)
+-- your eval_selection() code here...
 
 return M
