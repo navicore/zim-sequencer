@@ -1,29 +1,36 @@
 local M = {}
+local engine_path = vim.fn.stdpath("data") .. "/zim-sequencer-bin/zim-sequencer"
+local job_id = nil
 
-M.eval_selection = function()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local start_line = vim.fn.getpos("'<")[2]
-  local end_line = vim.fn.getpos("'>")[2]
-  local lines = vim.api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
-  local input = table.concat(lines, "\\n")
+M.setup = function()
+	if vim.fn.filereadable(engine_path) == 0 then
+		vim.notify("zim-sequencer engine not found. Did it build correctly?", vim.log.levels.ERROR)
+		return
+	end
 
-  local job = vim.fn.jobstart({ "cargo", "run", "--quiet" }, {
-    stdout_buffered = true,
-    on_stdout = function(_, data)
-      if data then
-        vim.api.nvim_echo({ { table.concat(data, "\\n"), "Normal" } }, false, {})
-      end
-    end,
-    stderr_buffered = true,
-    on_stderr = function(_, data)
-      if data then
-        vim.api.nvim_err_writeln(table.concat(data, "\\n"))
-      end
-    end,
-  })
-
-  vim.fn.chansend(job, input .. \"\\n\")
+	job_id = vim.fn.jobstart({ engine_path }, {
+		stdout_buffered = true,
+		on_stdout = function(_, data)
+			vim.notify(table.concat(data, "\n"), vim.log.levels.INFO)
+		end,
+		on_stderr = function(_, data)
+			vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR)
+		end,
+	})
 end
 
-return M
+M.eval_selection = function()
+	if not job_id then
+		vim.notify("zim-sequencer engine is not running", vim.log.levels.WARN)
+		return
+	end
 
+	local start_line = vim.fn.getpos("'<")[2]
+	local end_line = vim.fn.getpos("'>")[2]
+	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+	vim.fn.chansend(job_id, table.concat(lines, "\n") .. "\n")
+end
+
+vim.keymap.set("v", "<leader>e", M.eval_selection, { desc = "Eval zim-sequencer block" })
+
+return M
